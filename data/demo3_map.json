@@ -1,0 +1,130 @@
+{
+  "obstacles": [
+    {
+      "type": "rect",
+      "x": 288.68813133537896,
+      "y": 64.02927979579965,
+      "w": 112.5883712207978,
+      "h": 307.93714304199466
+    },
+    {
+      "type": "rect",
+      "x": 576.4139688996399,
+      "y": 332.5119763855388,
+      "w": 359.89787039810574,
+      "h": 106.81569649269193
+    }
+  ],
+  "seed": {
+    "x": 324.2930008667424,
+    "y": 393.1371014219315
+  },
+  "direction": null,
+  "requiredEnd": {
+    "x": 324.2930008667424,
+    "y": 393.1371014219315
+  },
+  "regions": [
+    {
+      "id": 1,
+      "seed": {
+        "x": 150,
+        "y": 515
+      }
+    },
+    {
+      "id": 2,
+      "seed": {
+        "x": 175,
+        "y": 145
+      }
+    },
+    {
+      "id": 3,
+      "seed": {
+        "x": 820,
+        "y": 150
+      }
+    },
+    {
+      "id": 4,
+      "seed": {
+        "x": 520,
+        "y": 535
+      }
+    },
+    {
+      "id": 5,
+      "seed": {
+        "x": 484.0337668723187,
+        "y": 379.6648514138442
+      }
+    },
+    {
+      "id": 6,
+      "seed": {
+        "x": 371.44539565152087,
+        "y": 33.23556549160018
+      }
+    },
+    {
+      "id": 7,
+      "seed": {
+        "x": 324.2930008667424,
+        "y": 393.1371014219315
+      }
+    }
+  ],
+  "task": {
+    "active": "home",
+    "show": true,
+    "regions": {
+      "home": {
+        "label": "HOME",
+        "role": "start / final",
+        "center": {
+          "x": 150,
+          "y": 515
+        },
+        "size": 94,
+        "color": "#0f766e"
+      },
+      "pick": {
+        "label": "PICK",
+        "role": "attach payload",
+        "center": {
+          "x": 175,
+          "y": 145
+        },
+        "size": 94,
+        "color": "#f97316"
+      },
+      "drop": {
+        "label": "DROP",
+        "role": "release payload",
+        "center": {
+          "x": 820,
+          "y": 150
+        },
+        "size": 94,
+        "color": "#be185d"
+      }
+    },
+    "returnPoint": {
+      "label": "RETURN",
+      "role": "must pass before home",
+      "point": {
+        "x": 520,
+        "y": 535
+      },
+      "color": "#7c3aed",
+      "regionId": 4
+    }
+  },
+  "showTaskLayer": true,
+  "selectedTemplate": "triangle",
+  "formationScale": 58,
+  "safeDistance": 54,
+  "safetyMargin": 8,
+  "obstacleMargin": 16
+}

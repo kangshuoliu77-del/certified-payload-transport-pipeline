@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo6 Certified State Flow</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d8deea;
+      --region: #0f766e;
+      --region-soft: #e6f4f1;
+      --bridge: #4353d8;
+      --bridge-soft: #eef0ff;
+      --loaded: #2563eb;
+      --delivered: #7c3aed;
+      --warn: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 34px 28px 42px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 10px 24px rgba(23, 32, 51, 0.05);
+    }
+
+    .metric .value {
+      display: block;
+      font-size: 24px;
+      font-weight: 750;
+      line-height: 1.1;
+    }
+
+    .metric .label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .note {
+      background: #fff8e7;
+      border: 1px solid #f6d58b;
+      border-left: 5px solid var(--warn);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 22px;
+      color: #5f4106;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 10px 24px rgba(23, 32, 51, 0.05);
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .legend {
+      display: grid;
+      gap: 12px;
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-top: 4px;
+    }
+
+    .dot.region {
+      background: var(--region);
+    }
+
+    .dot.bridge {
+      background: var(--bridge);
+    }
+
+    .legend-title {
+      font-weight: 700;
+    }
+
+    .legend-text {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #f1f4f9;
+      border: 1px solid #e1e6f0;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+
+    .phase-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .phase {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fbfcff;
+    }
+
+    .phase-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 750;
+    }
+
+    .phase-head.loaded {
+      color: var(--loaded);
+      background: #eff6ff;
+    }
+
+    .phase-head.delivered {
+      color: var(--delivered);
+      background: #f4f0ff;
+    }
+
+    .phase-body {
+      padding: 10px 12px 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .path {
+      margin-top: 8px;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .table-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: #eef2f8;
+      color: #344054;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e7ebf3;
+      vertical-align: top;
+    }
+
+    tbody tr.region-row {
+      background: var(--region-soft);
+    }
+
+    tbody tr.bridge-row {
+      background: #ffffff;
+    }
+
+    .pill {
+      display: inline-block;
+      min-width: 62px;
+      text-align: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.02em;
+    }
+
+    .pill.region {
+      color: #075e54;
+      background: #cdeee7;
+    }
+
+    .pill.bridge {
+      color: #2733a6;
+      background: #dde2ff;
+    }
+
+    .mode {
+      font-weight: 700;
+      color: #344054;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 900px) {
+      header,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>Demo6 Certified State Flow</h1>
+        <p class="subtitle">当前 demo6 的符号状态流程：任务 placement states 和 bridge states 如何组成一条 certified route。</p>
+      </div>
+      <section class="metrics" aria-label="summary metrics">
+        <div class="metric"><span class="value">24</span><span class="label">total states</span></div>
+        <div class="metric"><span class="value">7</span><span class="label">region placement states</span></div>
+        <div class="metric"><span class="value">17</span><span class="label">bridge states in route</span></div>
+        <div class="metric"><span class="value">13</span><span class="label">unique selected bridges</span></div>
+      </section>
+    </header>
+
+    <section class="note">
+      准确说法：除了 HOME / PICK / DROP / RETURN 附近的任务 placement states，其余中间状态都是 bridge states。
+      连续 bridge states 之间不是任意相连，而是因为它们共享一个 IRIS region。例如
+      <code>P55 ∩ P9</code> 到 <code>P9 ∩ P46</code> 的转移由公共区域 <code>P9</code> 作为 convex certificate。
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>State Meaning</h2>
+        <div class="legend">
+          <div class="legend-item">
+            <span class="dot region"></span>
+            <div>
+              <div class="legend-title">Region placement state</div>
+              <div class="legend-text">
+                状态只属于一个 IRIS region，例如 <code>P55</code>。它表示完整 formation envelope 已经被认证放在
+                <code>P_i</code> 内部。
+              </div>
+            </div>
+          </div>
+          <div class="legend-item">
+            <span class="dot bridge"></span>
+            <div>
+              <div class="legend-title">Bridge state</div>
+              <div class="legend-text">
+                状态属于两个区域交集，例如 <code>P55 ∩ P9</code>。它表示 formation 可以站在 overlap 中，用来切换 active region certificate。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Route Segments</h2>
+        <div class="phase-list">
+          <div class="phase">
+            <div class="phase-head loaded"><span>HOME to PICK</span><span>empty, line</span></div>
+            <div class="phase-body">
+              出发前从 triangle 切到 line，经过多个 bridge states 到达 PICK。
+              <div class="path">P55 -> P9 -> P46 -> P67 -> P6 -> P41 -> P3</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-head loaded"><span>PICK to DROP</span><span>loaded, triangle</span></div>
+            <div class="phase-body">
+              PICK 处切回 triangle 并拿 payload，载货阶段使用 triangle bridge states。
+              <div class="path">P3 -> P26 -> P42 -> P58</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-head delivered"><span>DROP to RETURN</span><span>delivered, line</span></div>
+            <div class="phase-body">
+              DROP 后 payload 已经释放，返回阶段切回 line。
+              <div class="path">P58 -> P39 -> P41 -> P30</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-head delivered"><span>RETURN to HOME</span><span>delivered, line</span></div>
+            <div class="phase-body">
+              经过 RETURN 后回 HOME，最终在 HOME 切回 triangle。
+              <div class="path">P30 -> P6 -> P67 -> P46 -> P9 -> P55</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>State</th>
+            <th>Certificate</th>
+            <th>Formation</th>
+            <th>Mode</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="region-row"><td>01</td><td><span class="pill region">REGION</span></td><td>s_home_start</td><td>P55</td><td>triangle</td><td class="mode">empty</td><td>HOME start placement</td></tr>
+          <tr class="region-row"><td>02</td><td><span class="pill region">REGION</span></td><td>s_home_start_line</td><td>P55</td><td>line</td><td class="mode">empty</td><td>Switch to line before outbound motion</td></tr>
+          <tr class="bridge-row"><td>03</td><td><span class="pill bridge">BRIDGE</span></td><td>b_home_pick_1_b9_55_line</td><td>P55 ∩ P9</td><td>line</td><td class="mode">empty</td><td>Bridge on HOME to PICK route</td></tr>
+          <tr class="bridge-row"><td>04</td><td><span class="pill bridge">BRIDGE</span></td><td>b_home_pick_2_b9_46_line</td><td>P9 ∩ P46</td><td>line</td><td class="mode">empty</td><td>Bridge on HOME to PICK route</td></tr>
+          <tr class="bridge-row"><td>05</td><td><span class="pill bridge">BRIDGE</span></td><td>b_home_pick_3_b46_67_line</td><td>P46 ∩ P67</td><td>line</td><td class="mode">empty</td><td>Bridge on HOME to PICK route</td></tr>
+          <tr class="bridge-row"><td>06</td><td><span class="pill bridge">BRIDGE</span></td><td>b_home_pick_4_b6_67_line</td><td>P67 ∩ P6</td><td>line</td><td class="mode">empty</td><td>Bridge on HOME to PICK route</td></tr>
+          <tr class="bridge-row"><td>07</td><td><span class="pill bridge">BRIDGE</span></td><td>b_home_pick_5_b6_41_line</td><td>P6 ∩ P41</td><td>line</td><td class="mode">empty</td><td>Bridge on HOME to PICK route</td></tr>
+          <tr class="bridge-row"><td>08</td><td><span class="pill bridge">BRIDGE</span></td><td>b_home_pick_6_b3_41_line</td><td>P41 ∩ P3</td><td>line</td><td class="mode">empty</td><td>Bridge on HOME to PICK route</td></tr>
+          <tr class="region-row"><td>09</td><td><span class="pill region">REGION</span></td><td>s_pick_line</td><td>P3</td><td>line</td><td class="mode">empty</td><td>Arrive at PICK in line formation</td></tr>
+          <tr class="region-row"><td>10</td><td><span class="pill region">REGION</span></td><td>s_pick</td><td>P3</td><td>triangle</td><td class="mode">empty</td><td>Switch to triangle before payload load</td></tr>
+          <tr class="bridge-row"><td>11</td><td><span class="pill bridge">BRIDGE</span></td><td>b_pick_drop_1_b3_26_triangle</td><td>P3 ∩ P26</td><td>triangle</td><td class="mode">loaded</td><td>Loaded bridge from PICK to DROP</td></tr>
+          <tr class="bridge-row"><td>12</td><td><span class="pill bridge">BRIDGE</span></td><td>b_pick_drop_2_b26_42_triangle</td><td>P26 ∩ P42</td><td>triangle</td><td class="mode">loaded</td><td>Loaded bridge from PICK to DROP</td></tr>
+          <tr class="bridge-row"><td>13</td><td><span class="pill bridge">BRIDGE</span></td><td>b_pick_drop_3_b42_58_triangle</td><td>P42 ∩ P58</td><td>triangle</td><td class="mode">loaded</td><td>Loaded bridge from PICK to DROP</td></tr>
+          <tr class="region-row"><td>14</td><td><span class="pill region">REGION</span></td><td>s_drop</td><td>P58</td><td>triangle</td><td class="mode">loaded</td><td>DROP placement, release payload</td></tr>
+          <tr class="bridge-row"><td>15</td><td><span class="pill bridge">BRIDGE</span></td><td>b_drop_return_1_b39_58_line</td><td>P58 ∩ P39</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from DROP to RETURN</td></tr>
+          <tr class="bridge-row"><td>16</td><td><span class="pill bridge">BRIDGE</span></td><td>b_drop_return_2_b39_41_line</td><td>P39 ∩ P41</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from DROP to RETURN</td></tr>
+          <tr class="bridge-row"><td>17</td><td><span class="pill bridge">BRIDGE</span></td><td>b_drop_return_3_b30_41_line</td><td>P41 ∩ P30</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from DROP to RETURN</td></tr>
+          <tr class="region-row"><td>18</td><td><span class="pill region">REGION</span></td><td>s_return</td><td>P30</td><td>line</td><td class="mode">delivered</td><td>RETURN placement</td></tr>
+          <tr class="bridge-row"><td>19</td><td><span class="pill bridge">BRIDGE</span></td><td>b_return_home_1_b6_30_line</td><td>P30 ∩ P6</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from RETURN to HOME</td></tr>
+          <tr class="bridge-row"><td>20</td><td><span class="pill bridge">BRIDGE</span></td><td>b_return_home_2_b6_67_line</td><td>P6 ∩ P67</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from RETURN to HOME</td></tr>
+          <tr class="bridge-row"><td>21</td><td><span class="pill bridge">BRIDGE</span></td><td>b_return_home_3_b46_67_line</td><td>P67 ∩ P46</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from RETURN to HOME</td></tr>
+          <tr class="bridge-row"><td>22</td><td><span class="pill bridge">BRIDGE</span></td><td>b_return_home_4_b9_46_line</td><td>P46 ∩ P9</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from RETURN to HOME</td></tr>
+          <tr class="bridge-row"><td>23</td><td><span class="pill bridge">BRIDGE</span></td><td>b_return_home_5_b9_55_line</td><td>P9 ∩ P55</td><td>line</td><td class="mode">delivered</td><td>Delivered bridge from RETURN to HOME</td></tr>
+          <tr class="region-row"><td>24</td><td><span class="pill region">REGION</span></td><td>s_home_final</td><td>P55</td><td>triangle</td><td class="mode">done</td><td>Final HOME placement, switch back to triangle</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

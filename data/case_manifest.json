@@ -1,0 +1,110 @@
+{
+  "schema": "swarm_random_payload_case_manifest_v1",
+  "description": "Standard paper-QP payload transport demos. These are the only demos treated as the supported QP pipeline set.",
+  "defaults": {
+    "random_seed": "auto",
+    "seed_budget": 1200,
+    "max_regions": 50,
+    "min_regions": 50,
+    "iteration_limit": 60,
+    "min_region_area": 900.0,
+    "obstacle_overlap_tolerance": 1.0,
+    "source_regions_only": false,
+    "obstacle_margin": 16,
+    "paper_qp": true
+  },
+  "standard_qp_demos": [
+    {
+      "number": 1,
+      "name": "demo1",
+      "case": "data/demo1_case.json",
+      "map": "data/demo1_map.json"
+    },
+    {
+      "number": 2,
+      "name": "demo2",
+      "case": "data/demo2_case.json",
+      "map": "data/demo2_map.json"
+    },
+    {
+      "number": 3,
+      "name": "demo3",
+      "case": "data/demo3_case.json",
+      "map": "data/demo3_map.json"
+    },
+    {
+      "number": 4,
+      "name": "demo4",
+      "case": "data/demo4_case.json",
+      "map": "data/demo4_map.json"
+    },
+    {
+      "number": 5,
+      "name": "demo5",
+      "case": "data/demo5_case.json",
+      "map": "data/demo5_map.json"
+    },
+    {
+      "number": 6,
+      "name": "demo6",
+      "case": "data/demo6_case.json",
+      "map": "data/demo6_map.json"
+    },
+    {
+      "number": 7,
+      "name": "demo7",
+      "case": "data/demo7_case.json",
+      "map": "data/demo7_map.json"
+    },
+    {
+      "number": 8,
+      "name": "demo8",
+      "case": "data/demo8_case.json",
+      "map": "data/demo8_map.json"
+    }
+  ],
+  "cases": [
+    {
+      "name": "demo1",
+      "input": "data/demo1_map.json",
+      "source_regions_only": true,
+      "min_regions": 6
+    },
+    {
+      "name": "demo2",
+      "input": "data/demo2_map.json",
+      "paper_qp_config": {
+        "constraintTolerance": 0.003,
+        "targetTolerance": 3.5
+      }
+    },
+    {
+      "name": "demo3",
+      "input": "data/demo3_map.json",
+      "min_regions": 50
+    },
+    {
+      "name": "demo4",
+      "input": "data/demo4_map.json"
+    },
+    {
+      "name": "demo5",
+      "input": "data/demo5_map.json"
+    },
+    {
+      "name": "demo6",
+      "input": "data/demo6_map.json"
+    },
+    {
+      "name": "demo7",
+      "input": "data/demo7_map.json"
+    },
+    {
+      "name": "demo8",
+      "input": "data/demo8_map.json",
+      "min_regions": 50
+    }
+  ],
+  "case_aliases": [],
+  "map_aliases": []
+}

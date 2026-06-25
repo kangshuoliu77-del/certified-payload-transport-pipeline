@@ -1,0 +1,14 @@
+random_payload_demo:
+  ros__parameters:
+    dt: 0.08
+    frames_per_tick: 1
+    loop_demo: true
+    publish_frame: map
+    show_region_labels: true
+    show_bridge_labels: true
+    show_formation_layer_graph: true
+    show_formation_graph_edges: false
+    show_symbolic_route: false
+    show_current_status_text: false
+    publish_centroid_path: false
+    map_scale: 0.01

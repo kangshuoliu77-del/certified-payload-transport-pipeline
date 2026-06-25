@@ -1,0 +1,10 @@
+build/
+install/
+log/
+out/
+screenshots/
+__pycache__/
+*.pyc
+*.log
+.pytest_cache/
+.python_drake/

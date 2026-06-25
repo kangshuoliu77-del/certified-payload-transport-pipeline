@@ -1,0 +1,1806 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IRIS Certified Map Designer</title>
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --panel: #ffffff;
+      --panel-2: #f7f9fc;
+      --ink: #18202c;
+      --muted: #697386;
+      --line: #d6dde8;
+      --line-strong: #9aa8ba;
+      --canvas: #fbfcfe;
+      --obstacle: #2b3038;
+      --region: #2fbf71;
+      --region-line: #138a50;
+      --seed: #f2a900;
+      --direction: #c2418c;
+      --formation: #2563eb;
+      --danger: #d33f49;
+      --accent: #0f766e;
+      --accent-2: #8b5cf6;
+      --warn: #c77700;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 308px minmax(620px, 1fr) 330px;
+    }
+
+    aside {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 16px;
+      overflow: auto;
+    }
+
+    aside.right {
+      border-right: 0;
+      border-left: 1px solid var(--line);
+    }
+
+    main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 18px 0 8px;
+      font-size: 12px;
+      color: #3f4b5d;
+      letter-spacing: 0;
+      font-weight: 750;
+    }
+
+    .subline {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 8px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    button, select, input[type="range"], textarea {
+      width: 100%;
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--line-strong); }
+
+    button.active {
+      border-color: var(--accent);
+      background: #e8f5f2;
+      color: #075e55;
+      box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.28);
+    }
+
+    button.primary {
+      color: white;
+      background: var(--accent);
+      border-color: #0f766e;
+    }
+
+    button.secondary {
+      color: white;
+      background: #4f46e5;
+      border-color: #4338ca;
+    }
+
+    button.danger {
+      color: white;
+      background: #b4232d;
+      border-color: #9f1f28;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin: 10px 0 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stage-shell {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+    }
+
+    .stage {
+      width: min(100%, 1020px);
+      border: 1px solid var(--line-strong);
+      background: var(--canvas);
+      box-shadow: 0 18px 60px rgba(28, 37, 52, 0.16);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: var(--canvas);
+      cursor: crosshair;
+    }
+
+    .topbar {
+      min-height: 48px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 2px;
+    }
+
+    .pillbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: white;
+      color: #465467;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .pill.ok { border-color: rgba(47, 191, 113, .45); color: #0b7a45; background: #edf9f2; }
+    .pill.warn { border-color: rgba(199, 119, 0, .45); color: #8a5200; background: #fff7e8; }
+    .pill.bad { border-color: rgba(211, 63, 73, .45); color: #9c1f28; background: #fff0f1; }
+
+    .legend {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 7px 8px;
+      align-items: center;
+      font-size: 12px;
+      color: #4b5565;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid transparent;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      padding: 9px;
+      min-height: 60px;
+    }
+
+    .metric b {
+      display: block;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    pre, textarea {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfe;
+      color: #1f2937;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    pre {
+      max-height: 245px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .toggle-line {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 30px;
+      font-size: 13px;
+      color: #344054;
+    }
+
+    .toggle-line input { width: 16px; height: 16px; }
+
+    @media (max-width: 1080px) {
+      .app { grid-template-columns: 280px 1fr; }
+      aside.right { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <h1>IRIS 地图设计器</h1>
+      <p class="subline">Drake IRIS / certified region / formation(P,f)</p>
+
+      <h2>编辑地图</h2>
+      <div class="toolbar" id="modeButtons">
+        <button data-mode="rect" class="active">障碍矩形</button>
+        <button data-mode="poly">凸障碍多边形</button>
+        <button data-mode="seed">种子点</button>
+        <button data-mode="direction">方向点</button>
+        <button data-mode="task">任务区域/点</button>
+      </div>
+      <div class="row">
+        <button id="finishPoly" class="primary">完成多边形</button>
+        <button id="undoVertex">撤销顶点</button>
+      </div>
+      <div class="row">
+        <button id="undoLast" class="secondary">撤销上一步</button>
+        <button id="undoObstacle">撤销障碍</button>
+      </div>
+      <div class="row">
+        <button id="clearMap" class="danger">清空地图</button>
+      </div>
+
+      <h2>IRIS 生成</h2>
+      <label>安全裕度 <span><span id="marginText">8</span> px</span></label>
+      <input id="margin" type="range" min="0" max="30" value="8" />
+      <label>最小机器人间距 <span><span id="safeText">54</span> px</span></label>
+      <input id="safeDistance" type="range" min="24" max="96" value="54" />
+      <div class="row">
+        <button id="runIris" class="primary">生成 Drake IRIS</button>
+        <button id="loadDemo" class="secondary">载入示例</button>
+      </div>
+      <button id="undoRegion">撤销区域</button>
+      <label class="toggle-line"><input id="autoIris" type="checkbox" checked />自动更新</label>
+
+      <h2>搬运任务 Demo</h2>
+      <div class="row-3" id="taskButtons">
+        <button data-task="home" class="active">home</button>
+        <button data-task="pick">pick</button>
+        <button data-task="drop">drop</button>
+      </div>
+      <button id="selectReturnTask" data-task="return">返程必经点</button>
+      <label>任务区域边长 <span><span id="taskSizeText">94</span> px</span></label>
+      <input id="taskRegionSize" type="range" min="54" max="170" value="94" />
+      <div class="row">
+        <button id="loadTransportTask" class="secondary">载入搬运任务</button>
+        <button id="generateReturnIris" class="primary">必经点生成 IRIS</button>
+      </div>
+      <button id="generateTaskCoverIris" class="primary">覆盖任务生成 IRIS</button>
+
+      <h2>Formation</h2>
+      <div class="row-3" id="templateButtons">
+        <button data-template="line">横队</button>
+        <button data-template="column">纵队</button>
+        <button data-template="triangle" class="active">三角</button>
+      </div>
+      <label>尺度 s <span><span id="scaleText">58</span> px</span></label>
+      <input id="formationScale" type="range" min="24" max="90" value="58" />
+      <button id="fitFormation" class="primary">自动放置</button>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>认证凸区域</h1>
+          <p class="subline" id="modeLine">当前：障碍矩形</p>
+        </div>
+        <div class="pillbar">
+          <span class="pill" id="seedPill">Seed 未设置</span>
+          <span class="pill" id="regionPill">Region 未生成</span>
+          <span class="pill" id="formationPill">Formation 未检查</span>
+        </div>
+      </div>
+      <div class="stage-shell">
+        <div class="stage">
+          <canvas id="canvas" width="980" height="650"></canvas>
+        </div>
+      </div>
+    </main>
+
+    <aside class="right">
+      <h2>视图</h2>
+      <label class="toggle-line"><input id="showGrid" type="checkbox" checked />网格</label>
+      <label class="toggle-line"><input id="showHalfplanes" type="checkbox" checked />分离半平面</label>
+      <label class="toggle-line"><input id="showFormation" type="checkbox" checked />Formation envelope</label>
+      <label class="toggle-line"><input id="showTaskLayer" type="checkbox" checked />搬运任务层</label>
+
+      <h2>图例</h2>
+      <div class="legend">
+        <span class="swatch" style="background: var(--obstacle)"></span><span>障碍物</span>
+        <span class="swatch" style="background: rgba(47,191,113,.24);border-color: var(--region-line)"></span><span>认证凸区域</span>
+        <span class="swatch" style="background: rgba(242,169,0,.22);border-color: var(--seed)"></span><span>Drake 最大内接椭圆</span>
+        <span class="swatch" style="background: var(--seed)"></span><span>seed / required point</span>
+        <span class="swatch" style="background: var(--direction)"></span><span>方向点</span>
+        <span class="swatch" style="background: rgba(37,99,235,.22);border-color: var(--formation)"></span><span>formation envelope</span>
+        <span class="swatch" style="background: rgba(15,118,110,.20);border-color: var(--accent)"></span><span>home/pick/drop 任务区域</span>
+      </div>
+
+      <h2>指标</h2>
+      <div class="metrics">
+        <div class="metric"><b id="areaMetric">0</b><span>区域面积</span></div>
+        <div class="metric"><b id="vertexMetric">0</b><span>区域顶点</span></div>
+        <div class="metric"><b id="allowedMetric">0</b><span>Allowed(P)</span></div>
+        <div class="metric"><b id="edgeMetric">0</b><span>half-planes</span></div>
+      </div>
+
+      <h2>状态</h2>
+      <pre id="statusBox"></pre>
+
+      <h2>导入导出</h2>
+      <div class="row">
+        <button id="exportJson">导出 JSON</button>
+        <button id="importJson">导入 JSON</button>
+      </div>
+      <label>JSON</label>
+      <textarea id="jsonBox"></textarea>
+    </aside>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+    const EPS = 1e-7;
+
+    function defaultTaskLayer() {
+      return {
+        active: "home",
+        show: true,
+        regions: {
+          home: {
+            label: "HOME",
+            role: "start / final",
+            center: {x: 150, y: 515},
+            size: 94,
+            color: "#0f766e",
+          },
+          pick: {
+            label: "PICK",
+            role: "attach payload",
+            center: {x: 175, y: 145},
+            size: 94,
+            color: "#f97316",
+          },
+          drop: {
+            label: "DROP",
+            role: "release payload",
+            center: {x: 820, y: 150},
+            size: 94,
+            color: "#be185d",
+          },
+        },
+        returnPoint: {
+          label: "RETURN",
+          role: "must pass before home",
+          point: {x: 520, y: 535},
+          color: "#7c3aed",
+          regionId: null,
+        },
+      };
+    }
+
+    const state = {
+      mode: "rect",
+      obstacles: [],
+      currentPoly: [],
+      rectStart: null,
+      hover: null,
+      seed: null,
+      direction: null,
+      requiredEnd: null,
+      regions: [],
+      currentRegionIndex: -1,
+      region: null,
+      ellipse: null,
+      halfplanes: [],
+      drakeResult: null,
+      selectedTemplate: "triangle",
+      activePlacement: null,
+      formationChecked: false,
+      allowed: [],
+      task: defaultTaskLayer(),
+      auto: true,
+      showGrid: true,
+      showHalfplanes: true,
+      showFormation: true,
+      showTaskLayer: true,
+      message: "请通过后端页面打开：python3 figures/drake_iris_server.py",
+    };
+
+    const templates = {
+      line: {
+        name: "横队",
+        robots: [{x:-1,y:0},{x:0,y:0},{x:1,y:0}],
+        envelope: [{x:-1.22,y:-0.24},{x:1.22,y:-0.24},{x:1.22,y:0.24},{x:-1.22,y:0.24}],
+      },
+      column: {
+        name: "纵队",
+        robots: [{x:0,y:-1},{x:0,y:0},{x:0,y:1}],
+        envelope: [{x:-0.24,y:-1.22},{x:0.24,y:-1.22},{x:0.24,y:1.22},{x:-0.24,y:1.22}],
+      },
+      triangle: {
+        name: "三角",
+        robots: [{x:0,y:-0.68},{x:-0.78,y:0.58},{x:0.78,y:0.58}],
+        envelope: [{x:0,y:-0.98},{x:1.08,y:0.76},{x:-1.08,y:0.76}],
+      },
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const add = (a, b) => ({x:a.x + b.x, y:a.y + b.y});
+    const sub = (a, b) => ({x:a.x - b.x, y:a.y - b.y});
+    const mul = (a, s) => ({x:a.x * s, y:a.y * s});
+    const dot = (a, b) => a.x * b.x + a.y * b.y;
+    const cross = (a, b) => a.x * b.y - a.y * b.x;
+    const len2 = (a) => dot(a, a);
+    const len = (a) => Math.sqrt(len2(a));
+    const dist2 = (a, b) => len2(sub(a, b));
+    const dist = (a, b) => Math.sqrt(dist2(a, b));
+    const undoStack = [];
+    const UNDO_LIMIT = 80;
+    let irisRequestSeq = 0;
+    const SNAPSHOT_KEYS = [
+      "mode",
+      "obstacles",
+      "currentPoly",
+      "seed",
+      "direction",
+      "requiredEnd",
+      "regions",
+      "currentRegionIndex",
+      "region",
+      "ellipse",
+      "halfplanes",
+      "drakeResult",
+      "selectedTemplate",
+      "activePlacement",
+      "formationChecked",
+      "allowed",
+      "task",
+      "auto",
+      "showGrid",
+      "showHalfplanes",
+      "showFormation",
+      "showTaskLayer",
+      "message",
+    ];
+
+    function deepCopy(value) {
+      return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+    }
+
+    function snapshotState() {
+      const statePart = {};
+      for (const key of SNAPSHOT_KEYS) statePart[key] = deepCopy(state[key]);
+      return {
+        state: statePart,
+        controls: {
+          margin: $("margin").value,
+          safeDistance: $("safeDistance").value,
+          formationScale: $("formationScale").value,
+          taskRegionSize: $("taskRegionSize").value,
+        },
+      };
+    }
+
+    function pushUndo(label) {
+      undoStack.push({label, snapshot: snapshotState()});
+      if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+      updateUndoButton();
+    }
+
+    function updateUndoButton() {
+      const btn = $("undoLast");
+      if (!btn) return;
+      btn.disabled = undoStack.length === 0;
+      btn.title = undoStack.length ? `撤销：${undoStack[undoStack.length - 1].label}` : "没有可撤销操作";
+    }
+
+    function syncControlsFromState(snapshot) {
+      if (snapshot?.controls) {
+        $("margin").value = snapshot.controls.margin;
+        $("safeDistance").value = snapshot.controls.safeDistance;
+        $("formationScale").value = snapshot.controls.formationScale;
+        $("taskRegionSize").value = snapshot.controls.taskRegionSize;
+      } else {
+        const item = selectedTaskRegion();
+        $("taskRegionSize").value = item ? Math.round(item.size) : 94;
+      }
+      $("autoIris").checked = state.auto;
+      $("showGrid").checked = state.showGrid;
+      $("showHalfplanes").checked = state.showHalfplanes;
+      $("showFormation").checked = state.showFormation;
+      $("showTaskLayer").checked = state.showTaskLayer;
+      document.querySelectorAll("#modeButtons button").forEach(b => b.classList.toggle("active", b.dataset.mode === state.mode));
+      document.querySelectorAll("#templateButtons button").forEach(b => b.classList.toggle("active", b.dataset.template === state.selectedTemplate));
+      document.querySelectorAll("#taskButtons button").forEach(b => b.classList.toggle("active", b.dataset.task === state.task.active));
+      $("selectReturnTask").classList.toggle("active", state.task.active === "return");
+    }
+
+    function undoLastAction() {
+      const entry = undoStack.pop();
+      if (!entry) {
+        state.message = "没有可撤销的上一步操作。";
+        updateUi();
+        draw();
+        return;
+      }
+      for (const key of SNAPSHOT_KEYS) state[key] = deepCopy(entry.snapshot.state[key]);
+      irisRequestSeq += 1;
+      state.rectStart = null;
+      state.hover = null;
+      syncControlsFromState(entry.snapshot);
+      state.message = `已撤销上一步：${entry.label}。`;
+      updateUndoButton();
+      updateUi();
+      draw();
+    }
+
+    function mousePoint(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: clamp((evt.clientX - rect.left) / rect.width * W, 0, W),
+        y: clamp((evt.clientY - rect.top) / rect.height * H, 0, H),
+      };
+    }
+
+    function rectToPoly(r) {
+      const x0 = Math.min(r.x, r.x + r.w);
+      const x1 = Math.max(r.x, r.x + r.w);
+      const y0 = Math.min(r.y, r.y + r.h);
+      const y1 = Math.max(r.y, r.y + r.h);
+      return [{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}];
+    }
+
+    function obstaclePoly(o) {
+      return o.type === "rect" ? rectToPoly(o) : o.points.map(p => ({...p}));
+    }
+
+    function polygonArea(poly) {
+      if (!poly || poly.length < 3) return 0;
+      let a = 0;
+      for (let i = 0; i < poly.length; i++) {
+        const p = poly[i], q = poly[(i + 1) % poly.length];
+        a += cross(p, q);
+      }
+      return a / 2;
+    }
+
+    function polygonCentroid(poly) {
+      const a = polygonArea(poly);
+      if (Math.abs(a) < EPS) {
+        const s = poly.reduce((acc, p) => add(acc, p), {x:0,y:0});
+        return mul(s, 1 / Math.max(1, poly.length));
+      }
+      let cx = 0, cy = 0;
+      for (let i = 0; i < poly.length; i++) {
+        const p = poly[i], q = poly[(i + 1) % poly.length];
+        const k = cross(p, q);
+        cx += (p.x + q.x) * k;
+        cy += (p.y + q.y) * k;
+      }
+      return {x: cx / (6 * a), y: cy / (6 * a)};
+    }
+
+    function pointInPoly(pt, poly) {
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const a = poly[i], b = poly[j];
+        const hit = ((a.y > pt.y) !== (b.y > pt.y)) &&
+          (pt.x < (b.x - a.x) * (pt.y - a.y) / ((b.y - a.y) || EPS) + a.x);
+        if (hit) inside = !inside;
+      }
+      return inside;
+    }
+
+    function pointInConvex(pt, poly) {
+      if (!poly || poly.length < 3) return false;
+      const area = polygonArea(poly);
+      const sign = area >= 0 ? 1 : -1;
+      for (let i = 0; i < poly.length; i++) {
+        const a = poly[i], b = poly[(i + 1) % poly.length];
+        if (sign * cross(sub(b, a), sub(pt, a)) < -0.75) return false;
+      }
+      return true;
+    }
+
+    function pointBlocked(p) {
+      if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) return true;
+      return state.obstacles.some(o => pointInPoly(p, obstaclePoly(o)));
+    }
+
+    function clipDirection(seed, direction) {
+      if (!direction) return seed;
+      const v = sub(direction, seed);
+      const total = len(v);
+      if (total < 4) return seed;
+      let best = seed;
+      const steps = Math.ceil(total / 3);
+      for (let i = 1; i <= steps; i++) {
+        const p = add(seed, mul(v, i / steps));
+        if (pointBlocked(p)) break;
+        best = p;
+      }
+      return best;
+    }
+
+    function drakeHalfplanes(A, b) {
+      return A.map((row, i) => ({
+        n: {x: -Number(row[0]), y: -Number(row[1])},
+        b: -Number(b[i]),
+        workspace: false,
+      }));
+    }
+
+    function drakeEllipse(payload) {
+      return {
+        center: {x: Number(payload.center[0]), y: Number(payload.center[1])},
+        rx: Number(payload.radii[0]),
+        ry: Number(payload.radii[1]),
+        theta: Number(payload.theta || 0),
+        volume: Number(payload.volume || 0),
+        A: payload.A,
+      };
+    }
+
+    function drakeVertices(vertices) {
+      return vertices.map(p => ({x: Number(p[0]), y: Number(p[1])}));
+    }
+
+    async function generateIris(saveNewRegion = false) {
+      const requestSeq = ++irisRequestSeq;
+      if (!state.seed) {
+        state.region = null;
+        state.ellipse = null;
+        state.halfplanes = [];
+        state.drakeResult = null;
+        clearFormationResult();
+        state.message = "请先放置种子点。";
+        updateUi();
+        draw();
+        return false;
+      }
+      if (pointBlocked(state.seed)) {
+        state.region = null;
+        state.ellipse = null;
+        state.halfplanes = [];
+        state.drakeResult = null;
+        clearFormationResult();
+        state.message = "种子点落在障碍内。";
+        updateUi();
+        draw();
+        return false;
+      }
+
+      state.message = "正在调用 Drake 标准 Iris(...) 后端。";
+      updateUi();
+      draw();
+
+      let result;
+      try {
+        const response = await fetch("/api/iris", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            width: W,
+            height: H,
+            seed: state.seed,
+            direction: state.direction,
+            obstacles: state.obstacles,
+            configuration_space_margin: Number($("margin").value),
+            iteration_limit: 80,
+            termination_threshold: 1e-3,
+            relative_termination_threshold: 1e-3,
+          }),
+        });
+        result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || `HTTP ${response.status}`);
+        }
+      } catch (err) {
+        if (requestSeq !== irisRequestSeq) return false;
+        state.region = null;
+        state.ellipse = null;
+        state.halfplanes = [];
+        state.drakeResult = null;
+        clearFormationResult();
+        const originHint = window.location.protocol === "file:"
+          ? "你现在像是直接打开了 HTML 文件，请改用后端服务地址打开。"
+          : `当前页面地址是 ${window.location.origin}，请确认同一地址下存在 /api/iris。`;
+        state.message = `Drake IRIS 后端调用失败：${err.message}。${originHint} 启动命令：python3 figures/drake_iris_server.py；打开地址：http://127.0.0.1:8765/。`;
+        updateUi();
+        draw();
+        return false;
+      }
+      if (requestSeq !== irisRequestSeq) return false;
+
+      state.region = drakeVertices(result.region.vertices);
+      state.ellipse = drakeEllipse(result.region.max_volume_inscribed_ellipsoid);
+      state.halfplanes = drakeHalfplanes(result.region.A, result.region.b);
+      state.requiredEnd = clipDirection(state.seed, state.direction);
+      state.drakeResult = result;
+      saveGeneratedRegion(saveNewRegion);
+      state.message = "已生成 Drake 标准 Iris(...) 区域，并返回 MaximumVolumeInscribedEllipsoid。";
+      clearFormationResult();
+      updateUi();
+      draw();
+      return true;
+    }
+
+    function saveGeneratedRegion(forceNew) {
+      const item = {
+        id: state.currentRegionIndex >= 0 ? state.regions[state.currentRegionIndex]?.id : state.regions.length + 1,
+        seed: {...state.seed},
+        direction: state.direction ? {...state.direction} : null,
+        requiredEnd: state.requiredEnd ? {...state.requiredEnd} : null,
+        region: state.region.map(p => ({...p})),
+        ellipse: {...state.ellipse, center: {...state.ellipse.center}},
+        halfplanes: state.halfplanes.map(h => ({...h, n: {...h.n}, q: h.q ? {...h.q} : null})),
+        drakeResult: state.drakeResult,
+      };
+      if (forceNew || state.currentRegionIndex < 0 || !state.regions[state.currentRegionIndex]) {
+        item.id = state.regions.length + 1;
+        state.regions.push(item);
+        state.currentRegionIndex = state.regions.length - 1;
+      } else {
+        state.regions[state.currentRegionIndex] = item;
+      }
+      if (isReturnTaskSeed()) {
+        state.task.returnPoint.regionId = item.id;
+      }
+    }
+
+    function ensureCcw(poly) {
+      return polygonArea(poly) < 0 ? [...poly].reverse() : poly;
+    }
+
+    function transformPoint(p, center, theta, scale) {
+      const c = Math.cos(theta), s = Math.sin(theta);
+      return {
+        x: center.x + scale * (c * p.x - s * p.y),
+        y: center.y + scale * (s * p.x + c * p.y),
+      };
+    }
+
+    function templateMinDistance(tpl) {
+      let best = Infinity;
+      for (let i = 0; i < tpl.robots.length; i++) {
+        for (let j = i + 1; j < tpl.robots.length; j++) {
+          best = Math.min(best, dist(tpl.robots[i], tpl.robots[j]));
+        }
+      }
+      return best;
+    }
+
+    function buildPlacement(templateKey, center, theta, scale) {
+      const tpl = templates[templateKey];
+      return {
+        templateKey,
+        center,
+        theta,
+        scale,
+        robots: tpl.robots.map(p => transformPoint(p, center, theta, scale)),
+        envelope: tpl.envelope.map(p => transformPoint(p, center, theta, scale)),
+      };
+    }
+
+    function placementFits(placement, region) {
+      if (!region) return false;
+      return placement.envelope.every(p => pointInConvex(p, region));
+    }
+
+    function candidateCenters(region) {
+      if (!region) return [];
+      const centroid = polygonCentroid(region);
+      const centers = [centroid];
+      if (state.seed) centers.push(state.seed);
+      const xs = region.map(p => p.x), ys = region.map(p => p.y);
+      const minX = Math.max(0, Math.min(...xs));
+      const maxX = Math.min(W, Math.max(...xs));
+      const minY = Math.max(0, Math.min(...ys));
+      const maxY = Math.min(H, Math.max(...ys));
+      const step = 34;
+      for (let y = minY; y <= maxY; y += step) {
+        for (let x = minX; x <= maxX; x += step) {
+          const p = {x, y};
+          if (pointInConvex(p, region)) centers.push(p);
+        }
+      }
+      return centers;
+    }
+
+    function candidateAngles() {
+      const angles = [0, Math.PI / 2, Math.PI / 4, -Math.PI / 4];
+      if (state.direction && state.seed) {
+        const theta = Math.atan2(state.direction.y - state.seed.y, state.direction.x - state.seed.x);
+        angles.unshift(theta, theta + Math.PI / 2);
+      }
+      return [...new Set(angles.map(a => Math.round(a * 1000) / 1000))];
+    }
+
+    function findPlacement(templateKey) {
+      const region = state.region;
+      if (!region) return null;
+      const scale = Number($("formationScale").value);
+      const dSafe = Number($("safeDistance").value);
+      const tpl = templates[templateKey];
+      const sMin = dSafe / templateMinDistance(tpl);
+      if (scale + EPS < sMin) return null;
+
+      const target = state.seed || polygonCentroid(region);
+      let best = null;
+      for (const center of candidateCenters(region)) {
+        for (const theta of candidateAngles()) {
+          const placement = buildPlacement(templateKey, center, theta, scale);
+          if (!placementFits(placement, region)) continue;
+          const directionCost = state.direction ? -dot(sub(center, target), sub(state.direction, target)) * 0.0001 : 0;
+          const cost = dist2(center, target) + Math.abs(theta) * 2 + directionCost;
+          if (!best || cost < best.cost) best = {placement, cost, sMin};
+        }
+      }
+      return best ? {...best.placement, sMin: best.sMin} : null;
+    }
+
+    function clearFormationResult() {
+      state.activePlacement = null;
+      state.allowed = [];
+      state.formationChecked = false;
+    }
+
+    function fitAllFormations() {
+      state.allowed = [];
+      state.activePlacement = null;
+      state.formationChecked = true;
+      for (const key of Object.keys(templates)) {
+        const placement = findPlacement(key);
+        if (placement) {
+          state.allowed.push({key, placement});
+          if (key === state.selectedTemplate) state.activePlacement = placement;
+        }
+      }
+      if (!state.activePlacement && state.allowed.length) {
+        state.activePlacement = state.allowed[0].placement;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#fbfcfe";
+      ctx.fillRect(0, 0, W, H);
+      if (state.showGrid) drawGrid();
+      drawWorkspaceBorder();
+      if (state.regions.length) drawStoredRegions();
+      else if (state.region) drawRegion(state.region, true, 1);
+      if (state.ellipse) drawIrisEllipse(state.ellipse);
+      drawObstacles();
+      if (state.currentPoly.length) drawCurrentPoly();
+      if (state.rectStart && state.hover) drawRectPreview();
+      if (state.showHalfplanes) drawHalfplanes();
+      drawRequiredPoints();
+      if (state.showFormation && state.activePlacement) drawFormation(state.activePlacement);
+      if (state.showTaskLayer) drawTaskLayer();
+    }
+
+    function drawGrid() {
+      ctx.save();
+      ctx.strokeStyle = "#e7ecf3";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y <= H; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawWorkspaceBorder() {
+      ctx.save();
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, W - 2, H - 2);
+      ctx.restore();
+    }
+
+    function drawObstacles() {
+      ctx.save();
+      for (const obs of state.obstacles) {
+        const poly = obstaclePoly(obs);
+        ctx.beginPath();
+        poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+        ctx.closePath();
+        ctx.fillStyle = "rgba(43,48,56,.94)";
+        ctx.strokeStyle = "#101828";
+        ctx.lineWidth = 1.5;
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawStoredRegions() {
+      for (let i = 0; i < state.regions.length; i++) {
+        const item = state.regions[i];
+        drawRegion(item.region, i === state.currentRegionIndex, item.id);
+        drawDot(item.seed, i === state.currentRegionIndex ? "#f2a900" : "#f8c75e", i === state.currentRegionIndex ? 8 : 5, "#6b4800");
+      }
+    }
+
+    function drawRegion(poly, active, id) {
+      ctx.save();
+      ctx.beginPath();
+      poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = active ? "rgba(47,191,113,.26)" : "rgba(47,191,113,.11)";
+      ctx.strokeStyle = active ? "#138a50" : "rgba(19,138,80,.55)";
+      ctx.lineWidth = active ? 2.7 : 1.4;
+      ctx.fill();
+      ctx.stroke();
+      const c = polygonCentroid(poly);
+      ctx.fillStyle = active ? "#075e35" : "rgba(7,94,53,.68)";
+      ctx.font = "700 12px system-ui";
+      ctx.fillText(`P${id}`, c.x + 6, c.y - 6);
+      ctx.restore();
+    }
+
+    function drawIrisEllipse(ellipse) {
+      ctx.save();
+      ctx.translate(ellipse.center.x, ellipse.center.y);
+      ctx.rotate(ellipse.theta);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, ellipse.rx, ellipse.ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(242,169,0,.16)";
+      ctx.strokeStyle = "#c77700";
+      ctx.lineWidth = 2.2;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawHalfplanes() {
+      ctx.save();
+      ctx.strokeStyle = "rgba(15,118,110,.28)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 5]);
+      for (const hp of state.halfplanes) {
+        const p0 = mul(hp.n, hp.b);
+        const tangent = {x:-hp.n.y, y:hp.n.x};
+        ctx.beginPath();
+        ctx.moveTo(p0.x - tangent.x * 1200, p0.y - tangent.y * 1200);
+        ctx.lineTo(p0.x + tangent.x * 1200, p0.y + tangent.y * 1200);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawCurrentPoly() {
+      ctx.save();
+      ctx.strokeStyle = "#8b5cf6";
+      ctx.fillStyle = "rgba(139,92,246,.10)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      state.currentPoly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      if (state.hover) ctx.lineTo(state.hover.x, state.hover.y);
+      ctx.stroke();
+      for (const p of state.currentPoly) drawDot(p, "#8b5cf6", 5);
+      ctx.restore();
+    }
+
+    function drawRectPreview() {
+      const r = {
+        x: state.rectStart.x,
+        y: state.rectStart.y,
+        w: state.hover.x - state.rectStart.x,
+        h: state.hover.y - state.rectStart.y,
+      };
+      const poly = rectToPoly(r);
+      ctx.save();
+      ctx.beginPath();
+      poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = "rgba(43,48,56,.24)";
+      ctx.strokeStyle = "#2b3038";
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawRequiredPoints() {
+      ctx.save();
+      if (state.seed && state.requiredEnd && dist(state.seed, state.requiredEnd) > 2) {
+        ctx.strokeStyle = "rgba(242,169,0,.75)";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(state.seed.x, state.seed.y);
+        ctx.lineTo(state.requiredEnd.x, state.requiredEnd.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      if (state.seed) {
+        drawDot(state.seed, "#f2a900", 8, "#6b4800");
+        drawLabel(isReturnTaskSeed() ? "return task point" : "seed", state.seed, 12, -12, "#6b4800");
+      }
+      if (state.direction) {
+        drawDot(state.direction, "#c2418c", 7, "#7e2358");
+        drawLabel("dir", state.direction, 12, -12, "#7e2358");
+      }
+      ctx.restore();
+    }
+
+    function drawFormation(placement) {
+      ctx.save();
+      ctx.beginPath();
+      placement.envelope.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = "rgba(37,99,235,.18)";
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 2.5;
+      ctx.fill();
+      ctx.stroke();
+      for (let i = 0; i < placement.robots.length; i++) {
+        drawRobot(placement.robots[i], i + 1);
+      }
+      drawDot(placement.center, "#2563eb", 4, "#1d4ed8");
+      ctx.restore();
+    }
+
+    function selectedTaskRegion() {
+      const key = state.task.active;
+      return state.task.regions[key] || null;
+    }
+
+    function taskRegionPoly(item) {
+      const h = item.size / 2;
+      return [
+        {x: item.center.x - h, y: item.center.y - h},
+        {x: item.center.x + h, y: item.center.y - h},
+        {x: item.center.x + h, y: item.center.y + h},
+        {x: item.center.x - h, y: item.center.y + h},
+      ];
+    }
+
+    function taskCoverageTargets() {
+      const targets = ["home", "pick", "drop"].map(key => {
+        const item = state.task.regions[key];
+        return {
+          key,
+          label: item.label,
+          seed: {...item.center},
+          points: taskRegionPoly(item),
+        };
+      });
+      const rp = state.task.returnPoint.point;
+      targets.push({
+        key: "return",
+        label: state.task.returnPoint.label,
+        seed: {...rp},
+        points: [{...rp}],
+      });
+      return targets;
+    }
+
+    function regionCoversPoints(region, points) {
+      return !!region && points.every(p => pointInConvex(p, region));
+    }
+
+    function findCoveringRegion(target) {
+      return state.regions.find(item => regionCoversPoints(item.region, target.points)) || null;
+    }
+
+    async function generateTaskCoverIris() {
+      pushUndo("覆盖任务生成 IRIS");
+      const targets = taskCoverageTargets();
+      const created = [];
+      const reused = [];
+      const failed = [];
+      for (const target of targets) {
+        const existing = findCoveringRegion(target);
+        if (existing) {
+          reused.push(`${target.label}->P${existing.id}`);
+          if (target.key === "return") state.task.returnPoint.regionId = existing.id;
+          continue;
+        }
+        if (pointBlocked(target.seed)) {
+          failed.push(`${target.label}: seed 在障碍内`);
+          continue;
+        }
+        state.seed = {...target.seed};
+        state.direction = null;
+        state.requiredEnd = {...target.seed};
+        state.currentRegionIndex = -1;
+        state.message = `正在为 ${target.label} 生成任务覆盖 IRIS。`;
+        updateUi();
+        draw();
+        const ok = await generateIris(true);
+        if (!ok) {
+          failed.push(`${target.label}: 生成失败`);
+          continue;
+        }
+        const covered = findCoveringRegion(target);
+        if (covered) {
+          created.push(`${target.label}->P${covered.id}`);
+          if (target.key === "return") state.task.returnPoint.regionId = covered.id;
+        } else {
+          failed.push(`${target.label}: 已生成 P${state.regions[state.regions.length - 1]?.id ?? "?"}，但未完整包住任务区域`);
+        }
+      }
+      const parts = [];
+      if (created.length) parts.push(`新增 ${created.length} 个: ${created.join(", ")}`);
+      if (reused.length) parts.push(`复用 ${reused.length} 个: ${reused.join(", ")}`);
+      if (failed.length) parts.push(`未覆盖 ${failed.length} 个: ${failed.join("; ")}`);
+      state.message = parts.length ? parts.join("。") : "四个任务对象已经由现有 IRIS 区域覆盖。";
+      clearFormationResult();
+      updateUi();
+      draw();
+    }
+
+    function drawTaskLayer() {
+      ctx.save();
+      const order = ["home", "pick", "drop"];
+      for (const key of order) {
+        drawTaskSquare(key, state.task.regions[key]);
+      }
+      drawReturnTaskPoint();
+      ctx.restore();
+    }
+
+    function drawTaskSquare(key, item) {
+      const poly = taskRegionPoly(item);
+      const active = state.task.active === key;
+      ctx.save();
+      ctx.beginPath();
+      poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = hexToRgba(item.color, active ? 0.24 : 0.16);
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = active ? 3.2 : 2.2;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = item.color;
+      ctx.font = "800 12px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(item.label, item.center.x, item.center.y - item.size * 0.38);
+      ctx.font = "650 10px system-ui";
+      ctx.fillStyle = "#475467";
+      ctx.fillText(item.role, item.center.x, item.center.y + item.size * 0.40);
+      drawTriangleFormationInsideSquare(item);
+      ctx.restore();
+    }
+
+    function drawTriangleFormationInsideSquare(item) {
+      const s = item.size * 0.27;
+      const c = item.center;
+      const robots = [
+        {x: c.x, y: c.y - 0.68 * s},
+        {x: c.x - 0.78 * s, y: c.y + 0.58 * s},
+        {x: c.x + 0.78 * s, y: c.y + 0.58 * s},
+      ];
+      ctx.save();
+      ctx.beginPath();
+      robots.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath();
+      ctx.fillStyle = "rgba(37,99,235,.12)";
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 1.8;
+      ctx.fill();
+      ctx.stroke();
+      robots.forEach((p, i) => drawMiniRobot(p, i + 1));
+      ctx.restore();
+    }
+
+    function drawMiniRobot(p, idx) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 1.6;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#2563eb";
+      ctx.font = "800 8px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(idx), p.x, p.y + 0.4);
+      ctx.restore();
+    }
+
+    function drawReturnTaskPoint() {
+      const item = state.task.returnPoint;
+      const p = item.point;
+      const active = state.task.active === "return";
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, active ? 16 : 13, 0, Math.PI * 2);
+      ctx.fillStyle = item.color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2.4;
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "white";
+      ctx.font = "800 12px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("R", p.x, p.y + 0.5);
+      ctx.fillStyle = item.color;
+      ctx.font = "800 12px system-ui";
+      ctx.fillText(item.label, p.x, p.y - 24);
+      ctx.font = "650 10px system-ui";
+      ctx.fillStyle = "#475467";
+      ctx.fillText(item.role, p.x, p.y + 28);
+      if (item.regionId) {
+        ctx.fillStyle = item.color;
+        ctx.font = "700 10px system-ui";
+        ctx.fillText(`IRIS P${item.regionId}`, p.x, p.y + 42);
+      }
+      ctx.restore();
+    }
+
+    function hexToRgba(hex, alpha) {
+      const raw = hex.replace("#", "");
+      const n = parseInt(raw, 16);
+      const r = (n >> 16) & 255;
+      const g = (n >> 8) & 255;
+      const b = n & 255;
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    function drawRobot(p, idx) {
+      ctx.save();
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#1d4ed8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#1d4ed8";
+      ctx.font = "700 10px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(idx), p.x, p.y + .5);
+      ctx.restore();
+    }
+
+    function drawDot(p, color, radius, stroke = "white") {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawLabel(text, p, dx, dy, color) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.font = "700 12px system-ui";
+      ctx.fillText(text, p.x + dx, p.y + dy);
+      ctx.restore();
+    }
+
+    function isReturnTaskSeed() {
+      return !!(state.seed && state.task?.returnPoint?.point && dist(state.seed, state.task.returnPoint.point) < 1.5);
+    }
+
+    function updateUi() {
+      updateUndoButton();
+      $("marginText").textContent = $("margin").value;
+      $("safeText").textContent = $("safeDistance").value;
+      $("scaleText").textContent = $("formationScale").value;
+      $("taskSizeText").textContent = $("taskRegionSize").value;
+      const modeNames = {rect:"障碍矩形", poly:"凸障碍多边形", seed:"种子点", direction:"方向点", task:"任务区域/点"};
+      $("modeLine").textContent = `当前：${modeNames[state.mode]}`;
+
+      const area = state.region ? Math.abs(polygonArea(state.region)) : 0;
+      $("areaMetric").textContent = Math.round(area).toLocaleString("zh-CN");
+      $("vertexMetric").textContent = state.region ? state.region.length : 0;
+      $("allowedMetric").textContent = state.allowed.length;
+      $("edgeMetric").textContent = state.halfplanes.length;
+
+      $("seedPill").textContent = state.seed ? "Seed 已设置" : "Seed 未设置";
+      $("seedPill").className = `pill ${state.seed ? "ok" : "warn"}`;
+      $("regionPill").textContent = state.region ? "Region 已生成" : "Region 未生成";
+      $("regionPill").className = `pill ${state.region ? "ok" : "warn"}`;
+      const fit = !!state.activePlacement;
+      $("formationPill").textContent = !state.formationChecked
+        ? "Formation 未放置"
+        : (fit ? "Formation 可行" : "Formation 不可行");
+      $("formationPill").className = `pill ${!state.formationChecked ? "warn" : (fit ? "ok" : "bad")}`;
+
+      const allowedNames = state.formationChecked
+        ? (state.allowed.map(x => templates[x.key].name).join(", ") || "无")
+        : "未计算";
+      const placement = state.activePlacement;
+      const lines = [
+        state.message,
+        "",
+        `障碍数量: ${state.obstacles.length}`,
+        `已生成区域: ${state.regions.length}`,
+        `任务循环: home -> pick -> drop -> return point -> home`,
+        `当前任务对象: ${state.task.active}`,
+        `Allowed(P): ${allowedNames}`,
+        `当前模板: ${templates[state.selectedTemplate].name}`,
+      ];
+      for (const key of ["home", "pick", "drop"]) {
+        const item = state.task.regions[key];
+        lines.push(`${key}: center=(${item.center.x.toFixed(1)}, ${item.center.y.toFixed(1)}), square=${item.size.toFixed(0)}px, formation=triangle`);
+      }
+      const rp = state.task.returnPoint.point;
+      lines.push(`return point: (${rp.x.toFixed(1)}, ${rp.y.toFixed(1)})${state.task.returnPoint.regionId ? `, IRIS=P${state.task.returnPoint.regionId}` : ""}`);
+      if (state.region) {
+        const c = polygonCentroid(state.region);
+        lines.push(`区域中心: (${c.x.toFixed(1)}, ${c.y.toFixed(1)})`);
+      }
+      if (state.ellipse) {
+        lines.push(`内接椭圆: rx=${state.ellipse.rx.toFixed(1)}, ry=${state.ellipse.ry.toFixed(1)}, theta=${(state.ellipse.theta * 180 / Math.PI).toFixed(1)} deg`);
+      }
+      if (placement) {
+        lines.push(`placement z=(t,s,R):`);
+        lines.push(`t=(${placement.center.x.toFixed(1)}, ${placement.center.y.toFixed(1)}), s=${placement.scale.toFixed(1)}, theta=${(placement.theta * 180 / Math.PI).toFixed(1)} deg`);
+        lines.push(`s_min=${placement.sMin.toFixed(1)}`);
+      }
+      $("statusBox").textContent = lines.join("\n");
+    }
+
+    function maybeGenerate() {
+      if (state.auto) generateIris();
+      else {
+        clearFormationResult();
+        updateUi();
+        draw();
+      }
+    }
+
+    function selectTask(key) {
+      state.task.active = key;
+      const item = selectedTaskRegion();
+      if (item) {
+        $("taskRegionSize").value = Math.round(item.size);
+      }
+      document.querySelectorAll("#taskButtons button").forEach(b => b.classList.toggle("active", b.dataset.task === key));
+      $("selectReturnTask").classList.toggle("active", key === "return");
+      updateUi();
+      draw();
+    }
+
+    function placeActiveTask(p) {
+      const item = selectedTaskRegion();
+      if (item) {
+        pushUndo(`移动 ${item.label} 任务区域`);
+        item.center = p;
+        item.size = Number($("taskRegionSize").value);
+        state.message = `${item.label} 任务区域已更新。`;
+        updateUi();
+        draw();
+        return;
+      }
+      if (state.task.active === "return") {
+        pushUndo("移动返程必经点");
+        state.task.returnPoint.point = p;
+        state.task.returnPoint.regionId = null;
+        state.seed = {...p};
+        state.currentRegionIndex = -1;
+        state.message = "返程必经点已更新。需要时点击“必经点生成 IRIS”或“覆盖任务生成 IRIS”。";
+        clearFormationResult();
+        updateUi();
+        draw();
+      }
+    }
+
+    function generateReturnTaskIris() {
+      pushUndo("必经点生成 IRIS");
+      const p = state.task.returnPoint.point;
+      state.seed = {...p};
+      state.currentRegionIndex = -1;
+      state.message = "正在为返程必经点生成 IRIS 区域。";
+      generateIris(true);
+    }
+
+    function loadTransportTask() {
+      pushUndo("载入搬运任务");
+      state.task = defaultTaskLayer();
+      state.mode = "task";
+      state.selectedTemplate = "triangle";
+      $("formationScale").value = 58;
+      $("taskRegionSize").value = state.task.regions.home.size;
+      document.querySelectorAll("#modeButtons button").forEach(b => b.classList.toggle("active", b.dataset.mode === "task"));
+      document.querySelectorAll("#templateButtons button").forEach(b => b.classList.toggle("active", b.dataset.template === "triangle"));
+      selectTask("home");
+      state.seed = {...state.task.returnPoint.point};
+      state.currentRegionIndex = -1;
+      state.task.returnPoint.regionId = null;
+      state.message = "已载入最小搬运任务：home -> pick -> drop -> return point -> home。";
+      clearFormationResult();
+      updateUi();
+      draw();
+    }
+
+    canvas.addEventListener("mousedown", (evt) => {
+      const p = mousePoint(evt);
+      if (state.mode === "rect") {
+        state.rectStart = p;
+        state.hover = p;
+      }
+    });
+
+    canvas.addEventListener("mousemove", (evt) => {
+      state.hover = mousePoint(evt);
+      draw();
+    });
+
+    canvas.addEventListener("mouseup", (evt) => {
+      const p = mousePoint(evt);
+      if (state.mode !== "rect" || !state.rectStart) return;
+      const r = {
+        type: "rect",
+        x: state.rectStart.x,
+        y: state.rectStart.y,
+        w: p.x - state.rectStart.x,
+        h: p.y - state.rectStart.y,
+      };
+      state.rectStart = null;
+      if (Math.abs(r.w) > 8 && Math.abs(r.h) > 8) {
+        pushUndo("添加矩形障碍");
+        state.obstacles.push(r);
+        state.message = "已添加矩形障碍。";
+        maybeGenerate();
+      } else {
+        draw();
+      }
+    });
+
+    canvas.addEventListener("click", (evt) => {
+      const p = mousePoint(evt);
+      if (state.mode === "poly") {
+        pushUndo("添加多边形顶点");
+        state.currentPoly.push(p);
+        state.message = "多边形顶点已添加。";
+        updateUi();
+        draw();
+      } else if (state.mode === "seed") {
+        pushUndo("设置 seed");
+        state.seed = p;
+        state.currentRegionIndex = -1;
+        state.message = "seed 已添加，正在生成包含该 seed 的区域。";
+        if (state.auto) generateIris(true);
+        else {
+          clearFormationResult();
+          updateUi();
+          draw();
+        }
+      } else if (state.mode === "direction") {
+        pushUndo("设置方向点");
+        state.direction = p;
+        state.message = "方向点已更新。";
+        maybeGenerate();
+      } else if (state.mode === "task") {
+        placeActiveTask(p);
+      }
+    });
+
+    $("modeButtons").addEventListener("click", (evt) => {
+      const btn = evt.target.closest("button[data-mode]");
+      if (!btn) return;
+      state.mode = btn.dataset.mode;
+      document.querySelectorAll("#modeButtons button").forEach(b => b.classList.toggle("active", b === btn));
+      updateUi();
+      draw();
+    });
+
+    $("templateButtons").addEventListener("click", (evt) => {
+      const btn = evt.target.closest("button[data-template]");
+      if (!btn) return;
+      pushUndo("切换 formation 模板");
+      state.selectedTemplate = btn.dataset.template;
+      document.querySelectorAll("#templateButtons button").forEach(b => b.classList.toggle("active", b === btn));
+      if (state.formationChecked) fitAllFormations();
+      updateUi();
+      draw();
+    });
+
+    $("taskButtons").addEventListener("click", (evt) => {
+      const btn = evt.target.closest("button[data-task]");
+      if (!btn) return;
+      selectTask(btn.dataset.task);
+    });
+
+    $("selectReturnTask").addEventListener("click", () => {
+      selectTask("return");
+    });
+
+    $("taskRegionSize").addEventListener("input", () => {
+      const item = selectedTaskRegion();
+      if (item) {
+        item.size = Number($("taskRegionSize").value);
+        state.message = `${item.label} 正方形任务区域边长已更新。`;
+      }
+      updateUi();
+      draw();
+    });
+
+    $("loadTransportTask").addEventListener("click", loadTransportTask);
+    $("generateReturnIris").addEventListener("click", generateReturnTaskIris);
+    $("generateTaskCoverIris").addEventListener("click", generateTaskCoverIris);
+
+    $("finishPoly").addEventListener("click", () => {
+      if (state.currentPoly.length < 3) return;
+      pushUndo("完成多边形障碍");
+      state.obstacles.push({type:"poly", points: ensureCcw(state.currentPoly)});
+      state.currentPoly = [];
+      state.message = "已添加凸多边形障碍。";
+      maybeGenerate();
+    });
+
+    $("undoVertex").addEventListener("click", () => {
+      if (!state.currentPoly.length) return;
+      pushUndo("撤销顶点");
+      state.currentPoly.pop();
+      updateUi();
+      draw();
+    });
+
+    $("undoObstacle").addEventListener("click", () => {
+      if (!state.obstacles.length) return;
+      pushUndo("撤销障碍");
+      state.obstacles.pop();
+      state.message = "已撤销一个障碍。";
+      maybeGenerate();
+    });
+
+    $("clearMap").addEventListener("click", () => {
+      pushUndo("清空地图");
+      state.obstacles = [];
+      state.currentPoly = [];
+      state.seed = null;
+      state.direction = null;
+      state.requiredEnd = null;
+      state.regions = [];
+      state.currentRegionIndex = -1;
+      state.region = null;
+      state.ellipse = null;
+      state.halfplanes = [];
+      state.drakeResult = null;
+      state.task = defaultTaskLayer();
+      $("taskRegionSize").value = state.task.regions.home.size;
+      clearFormationResult();
+      selectTask("home");
+      state.message = "地图已清空。";
+      updateUi();
+      draw();
+    });
+
+    $("undoRegion").addEventListener("click", () => {
+      if (!state.regions.length) return;
+      pushUndo("撤销区域");
+      state.regions.pop();
+      state.currentRegionIndex = state.regions.length - 1;
+      const latest = state.currentRegionIndex >= 0 ? state.regions[state.currentRegionIndex] : null;
+      if (latest) {
+        state.seed = {...latest.seed};
+        state.direction = latest.direction ? {...latest.direction} : null;
+        state.requiredEnd = latest.requiredEnd ? {...latest.requiredEnd} : null;
+        state.region = latest.region.map(p => ({...p}));
+        state.ellipse = {...latest.ellipse, center: {...latest.ellipse.center}};
+        state.halfplanes = latest.halfplanes.map(h => ({...h, n: {...h.n}, q: h.q ? {...h.q} : null}));
+        state.drakeResult = latest.drakeResult || null;
+      } else {
+        state.region = null;
+        state.ellipse = null;
+        state.halfplanes = [];
+        state.drakeResult = null;
+      }
+      clearFormationResult();
+      state.message = "已撤销最后一个区域。";
+      updateUi();
+      draw();
+    });
+
+    $("undoLast").addEventListener("click", undoLastAction);
+
+    $("runIris").addEventListener("click", () => {
+      pushUndo("生成 Drake IRIS");
+      generateIris(state.currentRegionIndex < 0);
+    });
+    $("fitFormation").addEventListener("click", () => {
+      pushUndo("自动放置 formation");
+      fitAllFormations();
+      state.message = state.activePlacement ? "已更新 formation(P,f)。" : "当前区域内没有可行 placement。";
+      updateUi();
+      draw();
+    });
+
+    $("loadDemo").addEventListener("click", () => {
+      pushUndo("载入示例地图");
+      state.obstacles = [
+        {type:"rect", x:205, y:0, w:95, h:252},
+        {type:"rect", x:205, y:397, w:95, h:253},
+        {type:"rect", x:515, y:0, w:95, h:205},
+        {type:"rect", x:515, y:348, w:95, h:302},
+        {type:"rect", x:760, y:245, w:120, h:112},
+      ];
+      state.currentPoly = [];
+      state.regions = [];
+      state.currentRegionIndex = -1;
+      state.seed = {x:370, y:325};
+      state.direction = {x:685, y:325};
+      state.selectedTemplate = "line";
+      $("formationScale").value = 58;
+      document.querySelectorAll("#templateButtons button").forEach(b => b.classList.toggle("active", b.dataset.template === "line"));
+      state.message = "已载入示例地图。";
+      generateIris(true);
+    });
+
+    $("margin").addEventListener("input", maybeGenerate);
+
+    ["safeDistance", "formationScale"].forEach(id => {
+      $(id).addEventListener("input", () => {
+        if (state.formationChecked) {
+          fitAllFormations();
+          state.message = state.activePlacement ? "已更新 formation(P,f)。" : "当前区域内没有可行 placement。";
+        }
+        updateUi();
+        draw();
+      });
+    });
+
+    ["showGrid", "showHalfplanes", "showFormation", "showTaskLayer"].forEach(id => {
+      $(id).addEventListener("change", () => {
+        state[id] = $(id).checked;
+        draw();
+      });
+    });
+
+    $("autoIris").addEventListener("change", () => {
+      state.auto = $("autoIris").checked;
+      if (state.auto) generateIris();
+    });
+
+    $("exportJson").addEventListener("click", () => {
+      const payload = {
+        obstacles: state.obstacles,
+        seed: state.seed,
+        direction: state.direction,
+        requiredEnd: state.requiredEnd,
+        regions: state.regions,
+        region: state.region,
+        ellipse: state.ellipse,
+        task: state.task,
+        showTaskLayer: state.showTaskLayer,
+        selectedTemplate: state.selectedTemplate,
+        drakeResult: state.drakeResult,
+        allowed: state.allowed.map(x => x.key),
+        formationScale: Number($("formationScale").value),
+        safeDistance: Number($("safeDistance").value),
+        safetyMargin: Number($("margin").value),
+      };
+      $("jsonBox").value = JSON.stringify(payload, null, 2);
+    });
+
+    $("importJson").addEventListener("click", () => {
+      try {
+        const data = JSON.parse($("jsonBox").value);
+        pushUndo("导入 JSON");
+        state.obstacles = data.obstacles || [];
+        state.regions = data.regions || [];
+        state.currentRegionIndex = state.regions.length - 1;
+        state.seed = data.seed || null;
+        state.direction = data.direction || null;
+        state.task = data.task || defaultTaskLayer();
+        state.showTaskLayer = data.showTaskLayer !== undefined ? data.showTaskLayer : true;
+        $("showTaskLayer").checked = state.showTaskLayer;
+        state.selectedTemplate = data.selectedTemplate || "line";
+        const selectedTaskItem = selectedTaskRegion();
+        $("taskRegionSize").value = selectedTaskItem ? selectedTaskItem.size : 94;
+        if (data.formationScale) $("formationScale").value = data.formationScale;
+        if (data.safeDistance) $("safeDistance").value = data.safeDistance;
+        if (data.safetyMargin !== undefined) $("margin").value = data.safetyMargin;
+        document.querySelectorAll("#templateButtons button").forEach(b => b.classList.toggle("active", b.dataset.template === state.selectedTemplate));
+        selectTask(state.task.active || "home");
+        state.message = "JSON 已导入。";
+        generateIris();
+      } catch (err) {
+        state.message = `JSON 解析失败: ${err.message}`;
+        updateUi();
+        draw();
+      }
+    });
+
+    window.addEventListener("keydown", (evt) => {
+      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === "z") {
+        evt.preventDefault();
+        undoLastAction();
+      }
+    });
+
+    updateUi();
+    draw();
+  </script>
+</body>
+</html>
