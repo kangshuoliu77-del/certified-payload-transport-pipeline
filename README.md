@@ -23,18 +23,18 @@ viewer, while Gazebo provides the polished 3D recording demo.
 Certified regions, bridge transitions, task regions, payload state, and the
 paper-QP execution in the original planar RViz visualization.
 
-[![RViz planar paper-QP demo](docs/assets/gifs/demo8-rviz-planar-qp-preview.gif)](docs/assets/videos/demo8-rviz-planar-qp.mp4)
+[![RViz planar paper-QP demo](https://raw.githubusercontent.com/kangshuoliu77-del/certified-payload-transport-pipeline/main/docs/assets/gifs/demo8-rviz-planar-qp-preview.gif)](https://github.com/kangshuoliu77-del/certified-payload-transport-pipeline/blob/main/docs/assets/videos/demo8-rviz-planar-qp.mp4)
 
-[Open full MP4](docs/assets/videos/demo8-rviz-planar-qp.mp4)
+[Open full MP4](https://github.com/kangshuoliu77-del/certified-payload-transport-pipeline/blob/main/docs/assets/videos/demo8-rviz-planar-qp.mp4)
 
 ### 2. RViz 3D Tracking View
 
 The same certified pipeline shown with realistic drone meshes, payload, ropes,
 and a 3D tracking camera in RViz.
 
-[![RViz 3D tracking demo](docs/assets/gifs/demo8-rviz-3d-follow-preview.gif)](docs/assets/videos/demo8-rviz-3d-follow.mp4)
+[![RViz 3D tracking demo](https://raw.githubusercontent.com/kangshuoliu77-del/certified-payload-transport-pipeline/main/docs/assets/gifs/demo8-rviz-3d-follow-preview.gif)](https://github.com/kangshuoliu77-del/certified-payload-transport-pipeline/blob/main/docs/assets/videos/demo8-rviz-3d-follow.mp4)
 
-[Open full MP4](docs/assets/videos/demo8-rviz-3d-follow.mp4)
+[Open full MP4](https://github.com/kangshuoliu77-del/certified-payload-transport-pipeline/blob/main/docs/assets/videos/demo8-rviz-3d-follow.mp4)
 
 ### 3. Gazebo 3D Recording View
 
@@ -42,9 +42,9 @@ Polished Gazebo recording view with 3D obstacles, X500-style drones, payload,
 delayed cable attach/detach at PICK/DROP, current/target region highlights, and
 bridge certificate highlights.
 
-[![Gazebo 3D recording demo](docs/assets/gifs/demo8-gazebo-3d-recording-preview.gif)](docs/assets/videos/demo8-gazebo-3d-recording.mp4)
+[![Gazebo 3D recording demo](https://raw.githubusercontent.com/kangshuoliu77-del/certified-payload-transport-pipeline/main/docs/assets/gifs/demo8-gazebo-3d-recording-preview.gif)](https://github.com/kangshuoliu77-del/certified-payload-transport-pipeline/blob/main/docs/assets/videos/demo8-gazebo-3d-recording.mp4)
 
-[Open full MP4](docs/assets/videos/demo8-gazebo-3d-recording.mp4)
+[Open full MP4](https://github.com/kangshuoliu77-del/certified-payload-transport-pipeline/blob/main/docs/assets/videos/demo8-gazebo-3d-recording.mp4)
 
 ## Pipeline Overview
 
